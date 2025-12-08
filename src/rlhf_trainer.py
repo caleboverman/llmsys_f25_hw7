@@ -477,34 +477,38 @@ class VERLTrainer:
         batch_size, seq_len = values.shape
         device = values.device
 
-        expanded_rewards = torch.zeros_like(values)
+        expanded_rewards = values.new_zeros(values.shape)
         lengths = attention_mask.long().sum(dim=1) - 1
-        lengths = torch.clamp(lengths, min=0)
-        batch_indices = torch.arange(batch_size, device=device)
-        expanded_rewards[batch_indices, lengths] = rewards
+        lengths = lengths.clamp(min=0, max=seq_len - 1)
+        expanded_rewards.scatter_(1, lengths.unsqueeze(1), rewards.unsqueeze(1))
 
-        returns = torch.zeros_like(values)
-        advantages = torch.zeros_like(values)
+        next_values = torch.cat([
+            values[:, 1:],
+            values.new_zeros(batch_size, 1)
+        ], dim=1)
+        deltas = (expanded_rewards + gamma * next_values - values) * attention_mask
 
-        for b in range(batch_size):
-            seq_length = int(attention_mask[b].sum().item())
-            if seq_length == 0:
-                continue
-            gae = 0.0
-            for t in reversed(range(seq_length)):
-                if t + 1 < seq_length:
-                    next_value = values[b, t + 1]
-                else:
-                    next_value = values[b, t].new_zeros(())
-                reward_t = expanded_rewards[b, t]
-                delta = reward_t + gamma * next_value - values[b, t]
-                gae = delta + gamma * gae_lambda * gae
-                advantages[b, t] = gae
-                returns[b, t] = advantages[b, t] + values[b, t]
+        advantages = values.new_zeros(values.shape)
+        returns = values.new_zeros(values.shape)
+        gae = values.new_zeros(batch_size)
+        gamma_lambda = gamma * gae_lambda
 
-        mask = attention_mask.bool()
-        advantages = advantages * mask
-        returns = returns * mask
+        for t in reversed(range(seq_len)):
+            mask_t = attention_mask[:, t]
+            gae = (deltas[:, t] + gamma_lambda * gae) * mask_t
+            advantages[:, t] = gae
+            returns[:, t] = (gae + values[:, t]) * mask_t
+
+        advantages = advantages * attention_mask
+        returns = returns * attention_mask
+
+        total_valid = attention_mask.sum().item()
+        if total_valid > 1:
+            valid_advantages = advantages[attention_mask.bool()]
+            std = valid_advantages.std()
+            if std > 1e-8:
+                mean = valid_advantages.mean()
+                advantages = ((advantages - mean) / (std + 1e-8)) * attention_mask
 
         # END ASSIGN7_2_1
         # END ASSIGN7_2_1
