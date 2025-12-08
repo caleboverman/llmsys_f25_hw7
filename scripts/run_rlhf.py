@@ -99,6 +99,14 @@ def run_rlhf_training(config: AssignmentConfig):
         config=config,
         device=device
     )
+
+    # Attempt to resume from checkpoint if available
+    resume_checkpoint = "/ocean/projects/cis250159p/coverman/hw7_outputs_saved/rlhf_model/rlhf_checkpoint_epoch_1.pt"
+    if os.path.exists(resume_checkpoint):
+        logger.info(f"Loading RLHF checkpoint from {resume_checkpoint}")
+        trainer.load_checkpoint(resume_checkpoint)
+    else:
+        logger.info("No RLHF checkpoint found; starting from scratch")
     
     # Initialize metrics tracker
     metrics_tracker = MetricsTracker()
