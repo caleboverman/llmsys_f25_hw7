@@ -144,134 +144,134 @@ def run_rlhf_training(config: AssignmentConfig):
     total_steps = 0
     
     # Training loop
-    # for epoch in range(config.training.ppo_num_epochs):
-    #     logger.info(f"RLHF Epoch {epoch + 1}/{config.training.ppo_num_epochs}")
-    #
-    #     epoch_metrics = {
-    #         'epoch': epoch,
-    #         'policy_loss': 0.0,
-    #         'value_loss': 0.0,
-    #         'entropy': 0.0,
-    #         'kl_divergence': 0.0,
-    #         'reward_mean': 0.0,
-    #         'reward_std': 0.0
-    #     }
-    #
-    #     num_batches = len(train_prompts) // config.verl.rollout_batch_size
-    #
-    #     # Create progress bar for epoch
-    #     epoch_progress = tqdm(range(num_batches), desc=f"Epoch {epoch + 1}")
-    #
-    #     for batch_idx in epoch_progress:
-    #         # Get batch of prompts
-    #         start_idx = batch_idx * config.verl.rollout_batch_size
-    #         end_idx = min(start_idx + config.verl.rollout_batch_size, len(train_prompts))
-    #         batch_prompts = train_prompts[start_idx:end_idx]
-    #
-    #         # Generate rollouts
-    #         rollout_batch = trainer.generate_rollouts(batch_prompts)
-    #
-    #         # Training step
-    #         step_metrics = trainer.train_step(rollout_batch)
-    #
-    #         # Update epoch metrics
-    #         for key in epoch_metrics:
-    #             if key != 'epoch' and hasattr(step_metrics, key):
-    #                 epoch_metrics[key] += getattr(step_metrics, key)
-    #
-    #         total_steps += 1
-    #
-    #         # Update progress bar
-    #         epoch_progress.set_postfix({
-    #             'reward': f"{step_metrics.reward_mean:.3f}",
-    #             'policy_loss': f"{step_metrics.policy_loss:.4f}",
-    #             'kl': f"{step_metrics.kl_divergence:.4f}"
-    #         })
-    #
-    #         # Log detailed metrics periodically
-    #         if total_steps % config.system.logging_steps == 0:
-    #             step_metrics_dict = {
-    #                 'step': total_steps,
-    #                 'policy_loss': step_metrics.policy_loss,
-    #                 'value_loss': step_metrics.value_loss,
-    #                 'entropy': step_metrics.entropy,
-    #                 'kl_divergence': step_metrics.kl_divergence,
-    #                 'reward_mean': step_metrics.reward_mean,
-    #                 'reward_std': step_metrics.reward_std,
-    #                 'advantage_mean': step_metrics.advantage_mean,
-    #                 'advantage_std': step_metrics.advantage_std
-    #             }
-    #
-    #             metrics_tracker.update(step_metrics_dict, step=total_steps)
-    #
-    #             logger.info(f"Step {total_steps}:")
-    #             logger.info(f"  Policy Loss: {step_metrics.policy_loss:.4f}")
-    #             logger.info(f"  Value Loss: {step_metrics.value_loss:.4f}")
-    #             logger.info(f"  Reward Mean: {step_metrics.reward_mean:.4f}")
-    #             logger.info(f"  KL Divergence: {step_metrics.kl_divergence:.4f}")
-    #
-    #         if (batch_idx + 1) % config.system.eval_steps == 0:
-    #             logger.info(f"Evaluating model after batch {batch_idx + 1}...")
-    #             eval_metrics = evaluate_policy(
-    #                 trainer=trainer,
-    #                 eval_prompts=eval_prompts,
-    #                 num_samples=3
-    #             )
-    #
-    #             logger.info("Evaluation results:")
-    #             for key, value in eval_metrics.items():
-    #                 logger.info(f"  {key}: {value:.4f}")
-    #
-    #             current_reward = eval_metrics['mean_reward']
-    #             if current_reward > best_reward:
-    #                 best_reward = current_reward
-    #
-    #                 # Save best model
-    #                 best_model_path = os.path.join(
-    #                     config.system.rlhf_model_dir,
-    #                     "best_rlhf_model"
-    #                 )
-    #                 trainer.policy.model.save_pretrained(best_model_path)
-    #                 trainer.tokenizer.save_pretrained(best_model_path)
-    #
-    #                 logger.info(f"Saved new best model with reward: {current_reward:.4f}")
-    #
-    #     # Average epoch metrics
-    #     for key in epoch_metrics:
-    #         if key != 'epoch':
-    #             epoch_metrics[key] /= num_batches
-    #
-    #     # Evaluate model after epoch
-    #     logger.info(f"Evaluating model after epoch {epoch + 1}...")
-    #     eval_metrics = evaluate_policy(
-    #         trainer=trainer,
-    #         eval_prompts=eval_prompts,
-    #         num_samples=3
-    #     )
-    #
-    #     # Add evaluation metrics to epoch metrics
-    #     for key, value in eval_metrics.items():
-    #         epoch_metrics[f'eval_{key}'] = value
-    #
-    #     logger.info("Evaluation results:")
-    #     for key, value in eval_metrics.items():
-    #         logger.info(f"  {key}: {value:.4f}")
-    #
-    #
-    #     # Save checkpoint
-    #     checkpoint_path = os.path.join(
-    #         config.system.rlhf_model_dir,
-    #         f"rlhf_checkpoint_epoch_{epoch + 1}.pt"
-    #     )
-    #     trainer.save_checkpoint(checkpoint_path, epoch, epoch_metrics)
-    #
-    #     # Update metrics tracker with epoch metrics
-    #     # metrics_tracker.update(epoch_metrics, step=epoch)
-    #
-    #     logger.info(f"Epoch {epoch + 1} completed:")
-    #     logger.info(f"  Average Reward: {epoch_metrics['reward_mean']:.4f}")
-    #     logger.info(f"  Policy Loss: {epoch_metrics['policy_loss']:.4f}")
-    #     logger.info(f"  KL Divergence: {epoch_metrics['kl_divergence']:.4f}")
+    for epoch in range(config.training.ppo_num_epochs):
+        logger.info(f"RLHF Epoch {epoch + 1}/{config.training.ppo_num_epochs}")
+
+        epoch_metrics = {
+            'epoch': epoch,
+            'policy_loss': 0.0,
+            'value_loss': 0.0,
+            'entropy': 0.0,
+            'kl_divergence': 0.0,
+            'reward_mean': 0.0,
+            'reward_std': 0.0
+        }
+
+        num_batches = len(train_prompts) // config.verl.rollout_batch_size
+
+        # Create progress bar for epoch
+        epoch_progress = tqdm(range(num_batches), desc=f"Epoch {epoch + 1}")
+
+        for batch_idx in epoch_progress:
+            # Get batch of prompts
+            start_idx = batch_idx * config.verl.rollout_batch_size
+            end_idx = min(start_idx + config.verl.rollout_batch_size, len(train_prompts))
+            batch_prompts = train_prompts[start_idx:end_idx]
+
+            # Generate rollouts
+            rollout_batch = trainer.generate_rollouts(batch_prompts)
+
+            # Training step
+            step_metrics = trainer.train_step(rollout_batch)
+
+            # Update epoch metrics
+            for key in epoch_metrics:
+                if key != 'epoch' and hasattr(step_metrics, key):
+                    epoch_metrics[key] += getattr(step_metrics, key)
+
+            total_steps += 1
+
+            # Update progress bar
+            epoch_progress.set_postfix({
+                'reward': f"{step_metrics.reward_mean:.3f}",
+                'policy_loss': f"{step_metrics.policy_loss:.4f}",
+                'kl': f"{step_metrics.kl_divergence:.4f}"
+            })
+
+            # Log detailed metrics periodically
+            if total_steps % config.system.logging_steps == 0:
+                step_metrics_dict = {
+                    'step': total_steps,
+                    'policy_loss': step_metrics.policy_loss,
+                    'value_loss': step_metrics.value_loss,
+                    'entropy': step_metrics.entropy,
+                    'kl_divergence': step_metrics.kl_divergence,
+                    'reward_mean': step_metrics.reward_mean,
+                    'reward_std': step_metrics.reward_std,
+                    'advantage_mean': step_metrics.advantage_mean,
+                    'advantage_std': step_metrics.advantage_std
+                }
+
+                metrics_tracker.update(step_metrics_dict, step=total_steps)
+
+                logger.info(f"Step {total_steps}:")
+                logger.info(f"  Policy Loss: {step_metrics.policy_loss:.4f}")
+                logger.info(f"  Value Loss: {step_metrics.value_loss:.4f}")
+                logger.info(f"  Reward Mean: {step_metrics.reward_mean:.4f}")
+                logger.info(f"  KL Divergence: {step_metrics.kl_divergence:.4f}")
+
+            if (batch_idx + 1) % config.system.eval_steps == 0:
+                logger.info(f"Evaluating model after batch {batch_idx + 1}...")
+                eval_metrics = evaluate_policy(
+                    trainer=trainer,
+                    eval_prompts=eval_prompts,
+                    num_samples=3
+                )
+
+                logger.info("Evaluation results:")
+                for key, value in eval_metrics.items():
+                    logger.info(f"  {key}: {value:.4f}")
+
+                current_reward = eval_metrics['mean_reward']
+                if current_reward > best_reward:
+                    best_reward = current_reward
+
+                    # Save best model
+                    best_model_path = os.path.join(
+                        config.system.rlhf_model_dir,
+                        "best_rlhf_model"
+                    )
+                    trainer.policy.model.save_pretrained(best_model_path)
+                    trainer.tokenizer.save_pretrained(best_model_path)
+
+                    logger.info(f"Saved new best model with reward: {current_reward:.4f}")
+
+        # Average epoch metrics
+        for key in epoch_metrics:
+            if key != 'epoch':
+                epoch_metrics[key] /= num_batches
+
+        # Evaluate model after epoch
+        logger.info(f"Evaluating model after epoch {epoch + 1}...")
+        eval_metrics = evaluate_policy(
+            trainer=trainer,
+            eval_prompts=eval_prompts,
+            num_samples=3
+        )
+
+        # Add evaluation metrics to epoch metrics
+        for key, value in eval_metrics.items():
+            epoch_metrics[f'eval_{key}'] = value
+
+        logger.info("Evaluation results:")
+        for key, value in eval_metrics.items():
+            logger.info(f"  {key}: {value:.4f}")
+
+
+        # Save checkpoint
+        checkpoint_path = os.path.join(
+            config.system.rlhf_model_dir,
+            f"rlhf_checkpoint_epoch_{epoch + 1}.pt"
+        )
+        trainer.save_checkpoint(checkpoint_path, epoch, epoch_metrics)
+
+        # Update metrics tracker with epoch metrics
+        # metrics_tracker.update(epoch_metrics, step=epoch)
+
+        logger.info(f"Epoch {epoch + 1} completed:")
+        logger.info(f"  Average Reward: {epoch_metrics['reward_mean']:.4f}")
+        logger.info(f"  Policy Loss: {epoch_metrics['policy_loss']:.4f}")
+        logger.info(f"  KL Divergence: {epoch_metrics['kl_divergence']:.4f}")
     
     training_time = time.time() - start_time
     logger.info(f"RLHF training completed in {training_time:.2f} seconds")

@@ -61,7 +61,7 @@ class TrainingConfig:
     
     # RLHF/PPO training
     ppo_learning_rate: float = 1e-6
-    ppo_num_epochs: int = 0
+    ppo_num_epochs: int = 2
     ppo_batch_size: int = 4
     ppo_mini_batch_size: int = 2
     
